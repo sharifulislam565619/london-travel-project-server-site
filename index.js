@@ -16,40 +16,95 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 
 
 async function run() {
-    try {
-        await client.connect();
-        const database = client.db("london-travel");
-        const hotels = database.collection("hotels");
+   try {
+      await client.connect();
+      const database = client.db("london-travel");
+      const hotels = database.collection("hotels");
 
-        // get all data
-        app.get('/hotels', async (req, res) => {
-            const result = await hotels.find({}).toArray()
-            res.json(result);
-        })
+      const database2 = client.db("allOrder");
+      const orders = database2.collection("orders");
 
-        // get single data
-        app.get('/hotels/:id', async (req, res) => {
-            const id = req.params.id
-            const query = { _id: ObjectId(id) };
-            const result = await hotels.findOne(query);
-            res.json(result);
+      // get all hotels data
+      app.get('/hotels', async (req, res) => {
+         const result = await hotels.find({}).toArray()
+         res.json(result);
+      })
+
+      // get all orders data
+      app.get("/manageOrders", async (req, res) => {
+
+         const cursor = await orders.find({}).toArray();
+         res.send(cursor)
+
+      })
+
+      // update status
+      app.put("/status/:id", async (req, res) => {
+
+         const id = req.params.id
+         const filter = { _id: ObjectId(id) };
+         const options = { upsert: true };
+         const updateDoc = {
+            $set: {
+               status: req.body.status
+            },
+         };
+         const result = await orders.updateOne(filter, updateDoc, options);
+         res.json(result)
+         console.log(result);
+
+      })
+
+      // delete orders
+      app.delete("/delete/:id", async (req, res) => {
+         const id = req.params.id;
+         const query = { _id: ObjectId(id) }
+         const result = await orders.deleteOne(query)
+         res.json(result)
+         console.log(result);
+      })
+
+      // get single data
+      app.get('/hotels/:id', async (req, res) => {
+         const id = req.params.id
+         const query = { _id: ObjectId(id) };
+         const result = await hotels.findOne(query);
+         res.json(result);
+      })
 
 
-        })
+
+      // post a single data
+      app.post("/booking", async (req, res) => {
+         const data = req.body;
+         const doc = {
+            Order_Id: data.Id,
+            name: data.name,
+            emailAddress: data.emailAddress,
+            phone: data.phone,
+            date: data.date,
+            status: data.status,
+            description: data.description,
+            email: data.email
+         }
+         const result = await orders.insertOne(doc);
+         res.json(result)
+         console.log(result);
+      })
 
 
-    } finally {
-        // await client.close()
-    }
+   } finally {
+      // await client.close()
+   }
 }
 run().catch(console.dir)
 
 
 
 app.get('/', (req, res) => {
-    res.send("Travel london site is running");
+   res.send("Travel london site is running");
 })
 
 app.listen(port, () => {
-    console.log("Running port is", port);
+   console.log("Running port is", port);
 })
