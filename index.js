@@ -24,6 +24,22 @@ async function run() {
       const database2 = client.db("allOrder");
       const orders = database2.collection("orders");
 
+      // insert a hotel
+      app.post("/addHotel", async (req, res) => {
+         const data = req.body;
+         const doc = {
+
+            name: data.name,
+            description: data.description,
+            charge: data.charge,
+            img: data.img
+         }
+         const result = await hotels.insertOne(doc);
+         res.json(result)
+         console.log(result);
+
+      })
+
       // get all hotels data
       app.get('/hotels', async (req, res) => {
          const result = await hotels.find({}).toArray()
@@ -38,6 +54,14 @@ async function run() {
 
       })
 
+      // get MyOrders
+      app.get("/myOrders/:email", async (req, res) => {
+         const result = await orders.find({
+            email: req.params.email,
+         }).toArray();
+         res.send(result);
+      });
+
       // update status
       app.put("/status/:id", async (req, res) => {
 
@@ -51,7 +75,7 @@ async function run() {
          };
          const result = await orders.updateOne(filter, updateDoc, options);
          res.json(result)
-         console.log(result);
+
 
       })
 
