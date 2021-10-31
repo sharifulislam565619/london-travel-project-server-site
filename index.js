@@ -36,7 +36,7 @@ async function run() {
          }
          const result = await hotels.insertOne(doc);
          res.json(result)
-         console.log(result);
+
 
       })
 
